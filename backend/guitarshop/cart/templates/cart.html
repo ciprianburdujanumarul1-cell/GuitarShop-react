@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Your Cart — GuitarShop</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  background: #0a0a0a;
+  color: #f0ece3;
+  font-family: 'Barlow Condensed', sans-serif;
+  margin: 0;
+}
+nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 15px 40px;
+  border-bottom: 1px solid #222;
+}
+.nav-brand { font-family: 'Bebas Neue'; font-size: 26px; }
+.nav-brand span { color: #e85d04; }
+.container {
+  max-width: 1100px;
+  margin: 40px auto;
+  display: flex;
+  gap: 30px;
+  padding: 0 20px;
+  flex-wrap: wrap;
+}
+.cart-items { flex: 2; }
+.summary { flex: 1; }
+h1 { font-family: 'Bebas Neue'; font-size: 42px; }
+h1 span { color: #e85d04; }
+.cart-card {
+  display: flex;
+  gap: 15px;
+  background: #111;
+  border: 1px solid #222;
+  border-left: 3px solid #e85d04;
+  padding: 15px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+}
+.cart-card img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; }
+.card-info { flex: 1; }
+.price { color: #e85d04; }
+.summary-box { background: #111; border: 1px solid #222; padding: 20px; border-radius: 6px; }
+.summary-box h2 { font-family: 'Bebas Neue'; font-size: 28px; }
+.summary-box h2 span { color: #e85d04; }
+.row { display: flex; justify-content: space-between; margin: 10px 0; color: #aaa; }
+.total { font-size: 20px; color: #e85d04; }
+button {
+  margin-top: 10px;
+  padding: 8px 14px;
+  background: none;
+  border: 1px solid #e85d04;
+  color: #e85d04;
+  cursor: pointer;
+  transition: 0.2s;
+}
+button:hover { background: #e85d04; color: white; }
+.checkout-btn { width: 100%; margin-top: 20px; padding: 12px; font-size: 16px; }
+.empty { color: #555; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="{% url 'home' %}" style="text-decoration:none; color:inherit;">
+    <div class="nav-brand">🎸 Guitar<span>Shop</span></div>
+  </a>
+</nav>
+
+<div class="container">
+
+  <div class="cart-items">
+    <h1>Your <span>Cart</span></h1>
+
+    <!-- mesajele AICI, o singură dată, înainte de buclă -->
+    {% for message in messages %}
+      <div style="
+        padding: 12px 16px;
+        margin-bottom: 15px;
+        border-radius: 6px;
+        border-left: 3px solid {% if message.tags == 'success' %}#4caf50{% else %}#e85d04{% endif %};
+        background: #111;
+        color: {% if message.tags == 'success' %}#4caf50{% else %}#e85d04{% endif %};
+      ">
+        {{ message }}
+      </div>
+    {% endfor %}
+
+    {% for item in items %}
+    <div class="cart-card">
+
+      {% if item.product.image %}
+        <img src="{{ item.product.image.url }}" alt="">
+      {% else %}
+        <img src="https://via.placeholder.com/80">
+      {% endif %}
+
+      <div class="card-info">
+        <div><strong>{{ item.product.name }}</strong></div>
+        <div class="price">{{ item.product.price }} €</div>
+
+        <div style="display:flex; align-items:center; gap:10px; margin: 6px 0;">
+          <span>Quantity:</span>
+
+          <form method="POST" action="{% url 'cart:update_cart' item.product.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="decrease">
+            <button type="submit">−</button>
+          </form>
+
+          <span>{{ item.qty }}</span>
+
+          <form method="POST" action="{% url 'cart:update_cart' item.product.id %}">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="increase">
+            <button type="submit">+</button>
+          </form>
+        </div>
+
+        <div style="color:#888;">Line total: {{ item.line_total }} €</div>
+
+        <form method="POST" action="{% url 'cart:remove_from_cart' item.product.id %}">
+          {% csrf_token %}
+          <button type="submit">Remove</button>
+        </form>
+      </div>
+
+    </div>
+    {% empty %}
+      <p class="empty">Your cart is empty.</p>
+    {% endfor %}
+
+  </div>
+
+  <div class="summary">
+    <div class="summary-box">
+      <h2>Order <span>Summary</span></h2>
+      <div class="row"><span>Subtotal</span><span>{{ subtotal }} €</span></div>
+      <div class="row"><span>Shipping</span><span>Free</span></div>
+      <div class="row"><span>VAT (19%)</span><span>{{ vat }} €</span></div>
+      <hr style="border:1px solid #222;">
+      <div class="row total"><span>Total</span><span>{{ total }} €</span></div>
+      <form method="POST" action="{% url 'payments:create_checkout_session_cart' %}">
+        {% csrf_token %}
+        <button class="checkout-btn">Checkout</button>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+
+</body>
+</html>

@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{{ product.name }} — GuitarShop</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  background: #0a0a0a;
+  color: #f0ece3;
+  font-family: 'Barlow Condensed', sans-serif;
+  margin: 0;
+}
+
+nav {
+  position: sticky;
+  top: 0;
+  background: rgba(10,10,10,0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid #222;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  z-index: 100;
+}
+
+.nav-brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+}
+.nav-brand span { color: #e85d04; }
+
+/* ── NAV ICONS WRAPPER ── */
+.nav-icons {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-favorites-link {
+  text-decoration: none;
+  color: #f0ece3;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: color 0.2s;
+}
+
+.nav-favorites-link:hover {
+  color: #e85d04;
+}
+
+/* ── HEART / WISHLIST ICON ── */
+.heart-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #333;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+  background: none;
+  padding: 0;
+}
+
+.heart-icon-wrap:hover {
+  border-color: #e85d04;
+}
+
+.heart-icon-wrap svg {
+  width: 20px;
+  height: 20px;
+  stroke: #f0ece3;
+  fill: none;
+  stroke-width: 1.8;
+  transition: fill 0.2s, stroke 0.2s;
+}
+
+.heart-icon-wrap.favorited svg {
+  fill: #e85d04;
+  stroke: #e85d04;
+}
+
+.heart-icon-wrap.pulse svg {
+  animation: heartPulse 0.35s ease;
+}
+
+@keyframes heartPulse {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+/* ── CART ICON ── */
+.cart-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #333;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.cart-icon-wrap:hover {
+  border-color: #e85d04;
+}
+
+.cart-icon-wrap svg {
+  width: 20px;
+  height: 20px;
+  stroke: #f0ece3;
+  fill: none;
+  stroke-width: 1.8;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #e85d04;
+  color: #0a0a0a;
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  font-family: 'Barlow Condensed', sans-serif;
+  transform: scale(1);
+  transition: transform 0.2s ease;
+}
+
+.cart-badge.hidden {
+  display: none;
+}
+
+.cart-badge.pop {
+  animation: badgePop 0.35s ease;
+}
+
+@keyframes badgePop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+.cart-icon-wrap.shake {
+  animation: cartShake 0.4s ease;
+}
+
+@keyframes cartShake {
+  0%, 100% { transform: rotate(0deg); }
+  20%      { transform: rotate(-12deg); }
+  40%      { transform: rotate(10deg); }
+  60%      { transform: rotate(-8deg); }
+  80%      { transform: rotate(6deg); }
+}
+
+/* flying dot that travels from the button to the cart icon */
+.fly-dot {
+  position: fixed;
+  width: 14px;
+  height: 14px;
+  background: #e85d04;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 999;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s ease;
+}
+
+.container {
+  display: flex;
+  max-width: 1100px;
+  margin: 50px auto;
+  gap: 40px;
+  padding: 0 20px;
+  flex-wrap: wrap;
+}
+
+.product-image img {
+  width: 100%;
+  max-width: 450px;
+  border-radius: 10px;
+}
+
+.product-info { flex: 1; }
+
+.product-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 40px;
+}
+
+.price {
+  font-size: 26px;
+  color: #e85d04;
+  margin: 15px 0;
+}
+
+/* ── AVERAGE RATING BADGE ── */
+.avg-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -5px 0 15px;
+}
+
+.avg-rating .stars {
+  color: #e85d04;
+  font-size: 20px;
+  letter-spacing: 2px;
+}
+
+.avg-rating .count {
+  color: #888;
+  font-size: 14px;
+}
+
+.description {
+  color: #aaa;
+  margin: 20px 0;
+}
+
+button {
+  background: none;
+  border: 1px solid #e85d04;
+  color: #e85d04;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: #e85d04;
+  color: white;
+}
+
+#add-to-cart-btn {
+  position: relative;
+}
+
+#add-to-cart-btn.added {
+  background: #e85d04;
+  color: white;
+}
+
+/* ── REVIEWS ── */
+.reviews-section {
+  width: 100%;
+  margin-top: 20px;
+  border-top: 1px solid #222;
+  padding-top: 40px;
+}
+
+.reviews-section h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  letter-spacing: 1px;
+  margin: 0 0 24px;
+}
+
+.reviews-section h2 span { color: #e85d04; }
+
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.review-form-row {
+  display: flex;
+  gap: 12px;
+}
+
+/* ── STAR INPUT WIDGET ── */
+.star-rating {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.star-rating input {
+  display: none;
+}
+
+.star-rating label {
+  font-size: 30px;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.15s;
+  line-height: 1;
+}
+
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+  color: #e85d04;
+}
+
+.review-form input[type="text"] {
+  flex: 1;
+  background: #111;
+  border: 1px solid #333;
+  color: #f0ece3;
+  padding: 12px 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.review-form input[type="text"]:focus {
+  border-color: #e85d04;
+}
+
+.review-form button {
+  white-space: nowrap;
+  padding: 12px 24px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+.messages-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.review-card {
+  background: #111;
+  border: 1px solid #222;
+  border-left: 3px solid #e85d04;
+  padding: 14px 18px;
+  border-radius: 0 6px 6px 0;
+  animation: fadeIn 0.3s ease;
+}
+
+.review-card .review-meta {
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.review-card .review-stars {
+  color: #e85d04;
+  font-size: 15px;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+
+.review-card p {
+  margin: 0;
+  color: #d0ccc5;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.no-reviews {
+  color: #444;
+  font-size: 15px;
+  font-style: italic;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <a href="{% url 'home' %}" style="text-decoration:none; color:inherit;">
+    <div class="nav-brand">🎸 Guitar<span>Shop</span></div>
+  </a>
+
+  <div class="nav-icons">
+    <a href="{% url 'products:wishlist_view' %}" class="nav-favorites-link">My Favorites</a>
+
+    <button class="heart-icon-wrap {% if is_favorited %}favorited{% endif %}" id="heart-icon" type="button" aria-label="Add to wishlist">
+      <svg viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7.5-4.6-10-9.3C.4 8.2 2.3 4.5 6 4c2-.3 3.8.8 6 3.1C14.2 4.8 16 3.7 18 4c3.7.5 5.6 4.2 4 7.7C19.5 16.4 12 21 12 21z"/>
+      </svg>
+    </button>
+
+    <a href="{% url 'cart:cart_detail' %}" style="text-decoration:none;">
+      <div class="cart-icon-wrap" id="cart-icon">
+        <svg viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l3-8H5.4M7 13L5.4 5M7 13l-1.5 6h11.5M9 21a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z"/>
+        </svg>
+        <span class="cart-badge {% if not cart_count %}hidden{% endif %}" id="cart-count">{{ cart_count|default:0 }}</span>
+      </div>
+    </a>
+  </div>
+</nav>
+
+<div class="container">
+  
+  <div class="product-image">
+    {% if product.image %}
+      <img src="{{ product.image.url }}" alt="{{ product.name }}">
+    {% else %}
+      <img src="https://via.placeholder.com/450x400" alt="No image">
+    {% endif %}
+  </div>
+
+  <div class="product-info">
+    <div class="product-name">{{ product.name }}</div>
+    <div class="price">{{ product.price }} €</div>
+
+    {% if avg_rating %}
+      <div class="avg-rating">
+        <span class="stars">{% for i in "12345" %}{% if forloop.counter <= avg_rating %}★{% else %}☆{% endif %}{% endfor %}</span>
+        <span class="count">{{ avg_rating }} · {{ review_count }} review{{ review_count|pluralize }}</span>
+      </div>
+    {% endif %}
+
+    <div class="description">
+      <span>
+        Body | {{ product.body }}<br>
+        Neck | {{ product.neck }}<br>
+        Grip Shape | {{ product.grip_shape }}<br>
+        Fingerboard | {{ product.fingerboard }}<br>
+        Fret | {{ product.fret }}<br>
+        Inlay | {{ product.inlay }}<br>
+        Scale | {{ product.scale }}<br>
+        Nut | {{ product.nut }}<br>
+        Construction | {{ product.construction }}<br>
+        Tuner | {{ product.tuner }}<br>
+        Bridge | {{ product.bridge }}<br>
+        Pickup | {{ product.pickup }}<br>
+        Controls | {{ product.controls }}<br>
+        Color | {{ product.color }}
+      </span>
+    </div>
+    {% if product.is_in_stock %}
+
+      <form method="POST" action="{% url 'cart:add_to_cart' product.id %}" id="add-to-cart-form">
+        {% csrf_token %}
+        <button type="submit" id="add-to-cart-btn">Add to Cart</button>
+      </form>
+
+      
+
+    {% else %}
+
+      <p style="color:red;">Out of stock</p>
+
+      <button disabled>Add to Cart</button>
+
+
+    {% endif %}
+    </div>
+  <!-- REVIEWS -->
+  <div class="reviews-section">
+    <h2>Re<span>views</span></h2>
+
+    <form class="review-form" id="form">
+      <div class="star-rating" id="star-rating">
+        <input type="radio" id="star5" name="rating" value="5" />
+        <label for="star5">★</label>
+        <input type="radio" id="star4" name="rating" value="4" />
+        <label for="star4">★</label>
+        <input type="radio" id="star3" name="rating" value="3" />
+        <label for="star3">★</label>
+        <input type="radio" id="star2" name="rating" value="2" />
+        <label for="star2">★</label>
+        <input type="radio" id="star1" name="rating" value="1" checked />
+        <label for="star1">★</label>
+      </div>
+      <div class="review-form-row">
+        <input type="text" name="message" placeholder="Leave a review…" autocomplete="off" />
+        <button type="submit">Post Review</button>
+      </div>
+    </form>
+
+    <div class="messages-list" id="messages">
+      {% for review in reviews %}
+        <div class="review-card">
+          <div class="review-meta">{{ review.username }} · {{ review.created_at|date:"H:i" }}</div>
+          <div class="review-stars">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+          <p>{{ review.message }}</p>
+        </div>
+      {% empty %}
+        <p class="no-reviews" id="empty-msg">No reviews yet. Be the first!</p>
+      {% endfor %}
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const url = `ws://${window.location.host}/ws/socket-server/{{ product.id }}/`;
+  const chatSocket = new WebSocket(url);
+
+  function starsHtml(rating) {
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      html += i <= rating ? '★' : '☆';
+    }
+    return html;
+  }
+
+  chatSocket.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+
+    if (data.type === 'chat') {
+      const emptyMsg = document.getElementById('empty-msg');
+      if (emptyMsg) emptyMsg.remove();
+
+      const messages = document.getElementById('messages');
+      const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const username = data.username || 'Anonymous';
+
+      messages.insertAdjacentHTML('beforeend', `
+        <div class="review-card">
+          <div class="review-meta">${username} · ${now}</div>
+          <div class="review-stars">${starsHtml(data.rating)}</div>
+          <p>${data.message}</p>
+        </div>
+      `);
+    }
+  };
+
+  const form = document.getElementById('form');
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const message = e.target.message.value.trim();
+    const checkedStar = form.querySelector('input[name="rating"]:checked');
+    const rating = checkedStar ? parseInt(checkedStar.value, 10) : 5;
+    if (!message) return;
+    chatSocket.send(JSON.stringify({ message, rating }));
+    form.reset();
+  });
+
+  // ── CSRF helper (cookie-based, works regardless of which forms exist on the page) ──
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+
+  // ── WISHLIST TOGGLE ──
+  const heartIcon = document.getElementById('heart-icon');
+
+  if (heartIcon) {
+    heartIcon.addEventListener('click', async () => {
+      heartIcon.disabled = true;
+
+      try {
+        const response = await fetch("{% url 'products:toggle_wishlist' product.id %}", {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCookie('csrftoken'),
+          },
+        });
+
+        const data = await response.json();
+
+        heartIcon.classList.toggle('favorited', data.favorited);
+        heartIcon.classList.remove('pulse');
+        void heartIcon.offsetWidth;
+        heartIcon.classList.add('pulse');
+
+      } catch (err) {
+        console.error('Wishlist toggle failed:', err);
+      } finally {
+        heartIcon.disabled = false;
+      }
+    });
+  }
+
+  // ── ADD TO CART: animation + live count ──
+  const cartForm = document.getElementById('add-to-cart-form');
+  const cartIcon = document.getElementById('cart-icon');
+  const cartCountEl = document.getElementById('cart-count');
+  const addBtn = document.getElementById('add-to-cart-btn');
+
+  function getCsrfToken(formEl) {
+    const input = formEl.querySelector('[name=csrfmiddlewaretoken]');
+    return input ? input.value : '';
+  }
+
+  function flyToCart(startEl) {
+    const startRect = startEl.getBoundingClientRect();
+    const endRect = cartIcon.getBoundingClientRect();
+
+    const dot = document.createElement('div');
+    dot.className = 'fly-dot';
+    dot.style.left = `${startRect.left + startRect.width / 2 - 7}px`;
+    dot.style.top = `${startRect.top + startRect.height / 2 - 7}px`;
+    document.body.appendChild(dot);
+
+    requestAnimationFrame(() => {
+      const dx = endRect.left + endRect.width / 2 - (startRect.left + startRect.width / 2);
+      const dy = endRect.top + endRect.height / 2 - (startRect.top + startRect.height / 2);
+      dot.style.transform = `translate(${dx}px, ${dy}px) scale(0.3)`;
+      dot.style.opacity = '0.2';
+    });
+
+    dot.addEventListener('transitionend', () => {
+      dot.remove();
+      bumpCart();
+    }, { once: true });
+  }
+
+  function bumpCart() {
+    cartIcon.classList.remove('shake');
+    void cartIcon.offsetWidth;
+    cartIcon.classList.add('shake');
+
+    cartCountEl.classList.remove('hidden');
+    cartCountEl.classList.remove('pop');
+    void cartCountEl.offsetWidth;
+    cartCountEl.classList.add('pop');
+  }
+
+  if (cartForm) {
+    cartForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      addBtn.disabled = true;
+      addBtn.classList.add('added');
+      const originalLabel = addBtn.textContent;
+      addBtn.textContent = 'Added ✓';
+
+      flyToCart(addBtn);
+
+      try {
+        const response = await fetch(cartForm.action, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCsrfToken(cartForm),
+          },
+          body: new FormData(cartForm),
+        });
+
+        const wentToCart = response.url.includes('/cart/');
+
+        if (wentToCart) {
+          const newCount = (parseInt(cartCountEl.textContent, 10) || 0) + 1;
+          cartCountEl.textContent = newCount;
+        } else {
+          addBtn.textContent = 'Out of stock';
+          addBtn.classList.remove('added');
+        }
+
+      } catch (err) {
+        console.error('Add to cart failed:', err);
+      } finally {
+        setTimeout(() => {
+          addBtn.disabled = false;
+          addBtn.classList.remove('added');
+          addBtn.textContent = originalLabel;
+        }, 900);
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

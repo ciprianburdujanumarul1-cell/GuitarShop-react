@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Order Confirmed — GuitarShop</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #0a0a0a; color: #f0ece3; font-family: 'Barlow Condensed', sans-serif; margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
+nav { position: sticky; top: 0; background: rgba(10,10,10,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; }
+.nav-brand { font-family: 'Bebas Neue', sans-serif; font-size: 24px; }
+.nav-brand span { color: #e85d04; }
+.page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+.card { background: #111; border: 1px solid #222; border-radius: 10px; max-width: 540px; width: 100%; padding: 50px 40px; text-align: center; }
+.check-circle { width: 72px; height: 72px; border-radius: 50%; border: 2px solid #e85d04; display: flex; align-items: center; justify-content: center; margin: 0 auto 28px; }
+.check-circle svg { width: 32px; height: 32px; }
+.title { font-family: 'Bebas Neue', sans-serif; font-size: 44px; margin: 0 0 8px; }
+.title span { color: #e85d04; }
+.subtitle { color: #888; font-size: 17px; margin: 0 0 32px; line-height: 1.5; }
+.divider { border: none; border-top: 1px solid #222; margin: 28px 0; }
+.detail-row { display: flex; justify-content: space-between; font-size: 16px; margin-bottom: 10px; }
+.detail-row .label { color: #555; }
+.detail-row .value { color: #f0ece3; }
+.detail-row .value.orange { color: #e85d04; font-family: 'Bebas Neue', sans-serif; font-size: 20px; }
+.actions { display: flex; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+.btn { flex: 1; min-width: 140px; padding: 12px 20px; cursor: pointer; font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.5px; text-align: center; text-decoration: none; transition: 0.2s; }
+.btn-primary { background: none; border: 1px solid #e85d04; color: #e85d04; }
+.btn-primary:hover { background: #e85d04; color: #0a0a0a; }
+.btn-secondary { background: none; border: 1px solid #333; color: #888; }
+.btn-secondary:hover { border-color: #555; color: #f0ece3; }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-brand">🎸 Guitar<span>Shop</span></div>
+</nav>
+
+<div class="page">
+  <div class="card">
+
+    <div class="check-circle">
+      <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polyline points="5,17 13,24 27,9" stroke="#e85d04" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <div class="title">Order <span>Confirmed</span></div>
+    <p class="subtitle">Your guitar is on its way. You'll receive a confirmation email with tracking details shortly.</p>
+
+    <hr class="divider">
+
+    <div class="detail-row">
+      <span class="label">Order ID</span>
+      <span class="value">#GS-{{ order_id|default:"GS"|slice:":8"|upper }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="label">Product(s)</span>
+      <span class="value">
+        {% if items %}
+          {% for item in items %}
+            {{ item.product.name }}{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+        {% else %}
+          {{ product.name|default:"Guitar" }}
+        {% endif %}
+      </span>
+    </div>
+    <div class="detail-row">
+      <span class="label">Email</span>
+      <span class="value">{{ user.email|default:"customer@example.com" }}</span>
+    </div>
+    
+    {% if tracking_number %}
+    <div class="detail-row">
+      <span class="label">Tracking Number</span>
+      <span class="value">{{ tracking_number }}</span>
+    </div>
+    {% endif %}
+
+    <div class="actions">
+      <a href="/" class="btn btn-secondary">Back to Shop</a>
+      
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

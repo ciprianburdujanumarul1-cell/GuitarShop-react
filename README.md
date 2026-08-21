@@ -1,0 +1,94 @@
+# GuitarShop — React + Django REST conversion
+
+Acest proiect e conversia site-ului GuitarShop din Django template-uri
+server-side într-un frontend React (Vite), care consumă un backend Django
+REST Framework + JWT.
+
+```
+guitarshop-react/
+├── backend/guitarshop/    ← proiectul Django original + API nou (app "api")
+└── frontend/               ← proiectul React (Vite)
+```
+
+## Ce s-a schimbat față de proiectul original
+
+- Am adăugat un app nou `api` în Django cu Django REST Framework +
+  `djangorestframework-simplejwt` pentru autentificare pe token (JWT),
+  în loc de sesiune. Login-ul folosește tot email + parolă, ca înainte.
+- Am adăugat `django-cors-headers`, configurat să accepte cereri de la
+  `http://localhost:5173` (dev server-ul Vite).
+- Coșul de cumpărături nu mai stă în sesiunea Django, ci în `localStorage`
+  pe frontend; backend-ul doar calculează totalurile (`/api/cart/quote/`)
+  și validează stocul la finalizarea comenzii (`/api/cart/checkout/`).
+- Review-urile live tot merg prin WebSocket (Django Channels), doar că
+  username-ul e trimis acum de client (JWT nu are sesiune de canal), nu
+  mai e citit din `scope["user"]`.
+- Template-urile Django (`.html`) rămân în proiect neatinse, dar nu mai
+  sunt folosite — tot UI-ul e acum în React.
+
+## Rulare — Backend (Django)
+
+```bash
+cd backend/guitarshop
+python -m venv venv
+source venv/bin/activate          # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+Backend-ul pornește pe `http://127.0.0.1:8000`.
+
+> Notă: `payments/views.py` importă `stripe`. E deja în `requirements.txt`,
+> dar dacă nu folosești plățile, poți ignora acel modul.
+
+## Rulare — Frontend (React)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Frontend-ul pornește pe `http://localhost:5173`.
+
+Fișierul `.env` din `frontend/` conține adresa backend-ului:
+
+```
+VITE_API_URL=http://127.0.0.1:8000
+VITE_WS_URL=ws://127.0.0.1:8000
+```
+
+Modifică-l dacă rulezi backend-ul pe alt port/host.
+
+## Cum funcționează autentificarea
+
+- `/api/auth/register/` — creează cont (username, email, parolă, adresă)
+- `/api/auth/login/` — primește `{ email, password }`, întoarce `access` +
+  `refresh` token (JWT)
+- Token-ul `access` e atașat automat la fiecare cerere din
+  `src/api/client.js`; la un 401, se încearcă automat refresh cu token-ul
+  `refresh`.
+- Rutele de produse/coș/wishlist din React sunt protejate
+  (`ProtectedRoute`) — dacă nu ești logat, ești trimis la `/login`.
+
+## Structura paginilor React
+
+| Rută                  | Corespondent Django original          |
+|------------------------|----------------------------------------|
+| `/`                    | `index.html`                          |
+| `/electric` `/acoustic` `/bass` | `electric.html`, `acoustic.html`, `bass.html` |
+| `/products/:brand`     | `products.html`                       |
+| `/product/:id`         | `Produs.html`                         |
+| `/cart`                 | `cart.html`                           |
+| `/wishlist`             | `wishlist.html`                       |
+| `/login`                | `login.html`                          |
+| `/signin`               | `signin.html`                         |
+
+## Ce merită continuat
+
+- Legarea reală a checkout-ului de Stripe (`payments/` există în backend,
+  dar nu e conectat încă la fluxul din React).
+- Pagina de detaliu produs presupune că brand-ul e cunoscut de frontend
+  (`src/config/catalog.js`) — dacă adaugi branduri noi în baza de date,
+  actualizează și fișierul acela.

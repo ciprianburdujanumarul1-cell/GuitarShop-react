@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>{{ brand }} Products</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0a;
+  --card-bg: #141414;
+  --accent: #e85d04;
+  --text: #f0ece3;
+  --muted: #666;
+  --border: #222;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow Condensed', sans-serif;
+}
+
+nav {
+  position: sticky;
+  top: 0;
+  background: rgba(10,10,10,0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  height: 60px;
+}
+
+.nav-brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+}
+
+.nav-brand span { color: var(--accent); }
+
+.hero {
+  position: relative;
+  height: 300px;
+  display: flex;
+  align-items: flex-end;
+  padding: 40px;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  background: url("https://images.unsplash.com/photo-1511379938547-c1f69419868d") center/cover;
+  filter: brightness(0.3);
+}
+
+.hero-content { position: relative; }
+
+.hero h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 70px;
+}
+
+.hero p { color: var(--muted); }
+
+/* CONTROLS BAR */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 30px 40px 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+/* SEARCH */
+.search-form {
+  display: flex;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+}
+
+.search-form input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  padding: 8px 14px;
+  letter-spacing: 0.5px;
+}
+
+.search-form input::placeholder { color: var(--muted); }
+
+.search-form button {
+  background: none;
+  border: none;
+  border-left: 1px solid var(--border);
+  color: var(--muted);
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: color 0.2s;
+}
+
+.search-form button:hover { color: var(--accent); }
+
+/* FILTER BUTTONS */
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* GRID */
+.products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.card { min-height: 400px; }
+
+.card:hover { background: #1a1a1a; }
+
+.card img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+}
+
+.card-body { padding: 15px; }
+
+.card h3 { font-family: 'Bebas Neue', sans-serif; }
+
+.card button {
+  margin-top: 10px;
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 8px;
+  cursor: pointer;
+}
+
+.card button:hover {
+  background: var(--accent);
+  color: white;
+}
+.btn-view {
+  display: inline-block;
+  margin-top: 10px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 8px 12px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.btn-view:hover {
+  background: var(--accent);
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <a href="{% url 'home' %}" style="text-decoration:none; color:inherit;">
+    <div class="nav-brand">🎸 Guitar<span>Shop</span></div>
+  </a>
+</nav>
+
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <h1>{{ brand }}</h1>
+    <p>Explore premium guitars from this brand</p>
+  </div>
+</div>
+
+<!-- CONTROLS: search + shape filters -->
+<div class="controls">
+
+  <form class="search-form" method="get">
+    {% if selected %}<input type="hidden" name="shape" value="{{ selected }}">{% endif %}
+    <input type="text" name="q" placeholder="Search guitars..." value="{{ query }}">
+    <button type="submit">⌕</button>
+  </form>
+
+  <div class="filter-bar">
+    <a href="{% if query %}?q={{ query }}{% else %}?{% endif %}"
+       class="filter-btn {% if not selected %}active{% endif %}">All</a>
+    {% for shape in shapes %}
+      <a href="?shape={{ shape }}{% if query %}&q={{ query }}{% endif %}"
+         class="filter-btn {% if selected == shape %}active{% endif %}">
+        {{ shape }}
+      </a>
+    {% endfor %}
+  </div>
+
+</div>
+
+<div class="products">
+  {% for product in products %}
+  <div class="card">
+
+    {% if product.image %}
+      <img src="{{ product.image.url }}" alt="{{ product.name }}">
+    {% else %}
+      <img src="https://via.placeholder.com/300x250" alt="No image">
+    {% endif %}
+
+    <div class="card-body">
+      <h3>{{ product.name }}</h3>
+      <p>{{ product.price }} €</p>
+
+      <a href="{% url 'products:product_detail' product.id %}" class="btn-view">
+        View
+      </a>
+    </div>
+
+  </div>
+
+  {% empty %}
+    <p style="grid-column: 1 / -1; text-align: center;">
+      No products found.
+    </p>
+  {% endfor %}
+</div>
+
+</body>
+</html>

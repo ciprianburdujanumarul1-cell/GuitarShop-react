@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Checkout — GuitarShop</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+body { background: #0a0a0a; color: #f0ece3; font-family: 'Barlow Condensed', sans-serif; margin: 0; min-height: 100vh; }
+nav { position: sticky; top: 0; background: rgba(10,10,10,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; }
+.nav-brand { font-family: 'Bebas Neue', sans-serif; font-size: 24px; }
+.nav-brand span { color: #e85d04; }
+.container { max-width: 900px; margin: 50px auto; padding: 0 20px; display: flex; gap: 40px; flex-wrap: wrap; }
+.order-summary { flex: 1; min-width: 260px; }
+.order-summary h2 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; margin: 0 0 24px; }
+.order-summary h2 span { color: #e85d04; }
+.product-row { display: flex; gap: 16px; align-items: center; background: #111; border: 1px solid #222; border-left: 3px solid #e85d04; padding: 14px 16px; border-radius: 0 6px 6px 0; margin-bottom: 12px; }
+.product-row img { width: 72px; height: 72px; object-fit: cover; border-radius: 4px; }
+.product-row .info { flex: 1; }
+.product-row .name { font-family: 'Bebas Neue', sans-serif; font-size: 20px; }
+.product-row .price { color: #e85d04; font-size: 18px; margin-top: 4px; }
+.product-row .qty-controls { display: flex; align-items: center; gap: 10px; }
+.qty-btn { background: none; border: 1px solid #333; color: #f0ece3; width: 28px; height: 28px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+.qty-btn:hover { border-color: #e85d04; color: #e85d04; }
+.qty-value { font-family: 'Bebas Neue', sans-serif; font-size: 20px; min-width: 20px; text-align: center; }
+.remove-btn { background: none; border: none; color: #333; cursor: pointer; font-size: 18px; padding: 4px; transition: color 0.2s; margin-left: 8px; }
+.remove-btn:hover { color: #e85d04; }
+.empty-cart { text-align: center; padding: 40px 0; color: #444; font-family: 'Bebas Neue', sans-serif; font-size: 22px; }
+.divider { border: none; border-top: 1px solid #222; margin: 20px 0; }
+.total-row { display: flex; justify-content: space-between; font-size: 18px; }
+.total-row.grand { font-family: 'Bebas Neue', sans-serif; font-size: 26px; margin-top: 8px; }
+.total-row.grand span:last-child { color: #e85d04; }
+.checkout-form { flex: 1; min-width: 280px; }
+.checkout-form h2 { font-family: 'Bebas Neue', sans-serif; font-size: 28px; margin: 0 0 24px; }
+.checkout-form h2 span { color: #e85d04; }
+.card-icons { display: flex; gap: 8px; margin-bottom: 16px; }
+.card-icon { background: #111; border: 1px solid #333; border-radius: 4px; padding: 4px 10px; font-size: 12px; color: #888; }
+.secure-badge { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #555; margin-bottom: 20px; }
+button[type="submit"] { width: 100%; background: none; border: 1px solid #e85d04; color: #e85d04; padding: 14px 20px; cursor: pointer; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; transition: 0.2s; }
+button[type="submit"]:hover { background: #e85d04; color: #0a0a0a; }
+button[type="submit"]:disabled { border-color: #333; color: #333; cursor: not-allowed; }
+.toast { position: fixed; bottom: 30px; right: 30px; background: #e85d04; color: #0a0a0a; font-family: 'Bebas Neue', sans-serif; font-size: 18px; padding: 12px 24px; border-radius: 4px; opacity: 0; transform: translateY(10px); transition: 0.3s; pointer-events: none; }
+.toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+<nav>
+  <div class="nav-brand">🎸 Guitar<span>Shop</span></div>
+  <div style="font-size:14px; color:#555;">Secure Checkout</div>
+</nav>
+
+<div class="container">
+
+  <!-- ORDER SUMMARY -->
+  <div class="order-summary">
+    <h2>Order <span>Summary</span></h2>
+
+    <div id="cart-items">
+      {% if items %}
+        {% for item in items %}
+        <div class="product-row" id="row-{{ item.product.id }}">
+          {% if item.product.image %}
+            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}">
+          {% else %}
+            <img src="https://via.placeholder.com/72x72/1a1a1a/e85d04?text=GT" alt="{{ item.product.name }}">
+          {% endif %}
+          <div class="info">
+            <div class="name">{{ item.product.name }}</div>
+            <div class="price" id="price-{{ item.product.id }}">
+              {{ item.subtotal|floatformat:2 }} €
+            </div>
+          </div>
+          <div class="qty-controls">
+            <button class="qty-btn" onclick="updateQty({{ item.product.id }}, -1)">−</button>
+            <span class="qty-value" id="qty-{{ item.product.id }}">{{ item.quantity }}</span>
+            <button class="qty-btn" onclick="updateQty({{ item.product.id }}, 1)">+</button>
+          </div>
+          <button class="remove-btn" onclick="removeFromCart({{ item.product.id }})" title="Elimină">✕</button>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-cart" id="empty-msg">Coșul este gol</div>
+      {% endif %}
+    </div>
+
+    <hr class="divider">
+    <div class="total-row">
+      <span>Subtotal</span><span id="subtotal">{{ total|floatformat:2 }} €</span>
+    </div>
+    <div class="total-row" style="color:#555; margin-top:6px;">
+      <span>Shipping</span><span>Free</span>
+    </div>
+    <hr class="divider">
+    <div class="total-row grand">
+      <span>Total</span><span id="grand-total">{{ total|floatformat:2 }} €</span>
+    </div>
+  </div>
+
+  <!-- PAYMENT FORM -->
+  <div class="checkout-form">
+    <h2>Pay<span>ment</span></h2>
+
+    <div class="card-icons">
+      <span class="card-icon">VISA</span>
+      <span class="card-icon">MC</span>
+      <span class="card-icon">AMEX</span>
+    </div>
+
+    <div class="secure-badge">
+      <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="6" width="12" height="9" rx="1" stroke="#555" stroke-width="1.5"/>
+        <path d="M4 6V4a3 3 0 0 1 6 0v2" stroke="#555" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      Plată securizată prin Stripe
+    </div>
+
+    <form method="POST" action="{% url 'create_checkout_session_cart' %}" id="checkout-form">
+      {% csrf_token %}
+      <button type="submit" id="pay-btn" {% if not items %}disabled{% endif %}>
+        PAY {{ total|floatformat:2 }} €
+      </button>
+    </form>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // Prețurile per unitate din Django (pentru calcul local)
+  const unitPrices = {
+    {% for item in items %}
+      {{ item.product.id }}: {{ item.product.price }},
+    {% endfor %}
+  };
+
+  const quantities = {
+    {% for item in items %}
+      {{ item.product.id }}: {{ item.quantity }},
+    {% endfor %}
+  };
+
+  function getCsrf() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  function recalcTotal() {
+    let total = 0;
+    for (const [id, qty] of Object.entries(quantities)) {
+      if (qty > 0) total += unitPrices[id] * qty;
+    }
+    const fmt = total.toFixed(2) + ' €';
+    document.getElementById('subtotal').textContent = fmt;
+    document.getElementById('grand-total').textContent = fmt;
+    document.getElementById('pay-btn').textContent = 'PAY ' + fmt;
+
+    // Dezactivează butonul dacă coșul e gol
+    const hasItems = Object.values(quantities).some(q => q > 0);
+    document.getElementById('pay-btn').disabled = !hasItems;
+  }
+
+  async function updateQty(productId, delta) {
+    const newQty = (quantities[productId] || 0) + delta;
+
+    if (newQty <= 0) {
+      removeFromCart(productId);
+      return;
+    }
+
+    const res = await fetch("{% url 'update_cart' %}", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+      body: JSON.stringify({ product_id: productId, quantity: newQty })
+    });
+
+    if (res.ok) {
+      quantities[productId] = newQty;
+      document.getElementById('qty-' + productId).textContent = newQty;
+      document.getElementById('price-' + productId).textContent =
+        (unitPrices[productId] * newQty).toFixed(2) + ' €';
+      recalcTotal();
+    }
+  }
+
+  async function removeFromCart(productId) {
+    const res = await fetch("{% url 'remove_from_cart' %}", {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCsrf() },
+      body: JSON.stringify({ product_id: productId })
+    });
+
+    if (res.ok) {
+      delete quantities[productId];
+      delete unitPrices[productId];
+
+      const row = document.getElementById('row-' + productId);
+      row.style.transition = 'opacity 0.3s';
+      row.style.opacity = '0';
+      setTimeout(() => {
+        row.remove();
+        recalcTotal();
+
+        // Arată mesaj dacă coșul e gol
+        if (Object.keys(quantities).length === 0) {
+          document.getElementById('cart-items').innerHTML =
+            '<div class="empty-cart" id="empty-msg">Coșul este gol</div>';
+        }
+      }, 300);
+
+      showToast('Produs eliminat');
+    }
+  }
+</script>
+
+</body>
+</html>

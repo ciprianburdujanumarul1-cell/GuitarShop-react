@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Guitar Shop</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --accent: #e85d04;
+    --text: #f0ece3;
+    --muted: #666;
+    --border: #222;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 36px; height: 58px;
+  }
+  .nav-brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 0.1em; color: var(--text);
+    display: flex; align-items: center; gap: 7px;
+  }
+  .nav-brand span { color: var(--accent); }
+  .nav-links { display: flex; align-items: center; gap: 2px; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 5px 12px; border: 1px solid transparent; transition: all 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); border-color: var(--border); }
+  .nav-auth {
+    display: flex; align-items: center; gap: 6px; margin-left: 10px;
+    padding-left: 10px; border-left: 1px solid var(--border);
+  }
+  .nav-auth span { font-size: 12px; color: var(--muted); letter-spacing: 0.06em; }
+  .nav-auth a {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 5px 12px; text-decoration: none; transition: all 0.2s;
+  }
+  .btn-outline { border: 1px solid var(--border); color: var(--muted); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-filled { background: var(--accent); color: #fff; border: 1px solid var(--accent); }
+  .btn-filled:hover { background: #d05203; }
+
+  /* HERO */
+  .hero {
+    position: relative; height: 380px;
+    display: flex; align-items: flex-end;
+    padding: 0 36px 42px; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: url("https://images.unsplash.com/photo-1511379938547-c1f69419868d") center/cover no-repeat;
+    filter: brightness(0.28) saturate(0.5);
+    transform: scale(1.04); transition: transform 8s ease;
+  }
+  .hero:hover .hero-bg { transform: scale(1); }
+  .hero-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, var(--bg) 0%, transparent 55%),
+                linear-gradient(100deg, rgba(232,93,4,0.15) 0%, transparent 55%);
+  }
+  .hero-content { position: relative; z-index: 1; }
+  .hero-eyebrow {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 9px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .hero-eyebrow::before { content: ''; display: block; width: 28px; height: 1px; background: var(--accent); }
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 7.5vw, 88px);
+    line-height: 0.88; letter-spacing: 0.04em;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero-sub { margin-top: 12px; font-size: 13px; color: var(--muted); letter-spacing: 0.1em; }
+
+  /* SECTION */
+  .section-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 48px 36px 24px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 30px; letter-spacing: 0.08em;
+  }
+  .section-count { font-size: 12px; color: var(--muted); letter-spacing: 0.12em; }
+  .divider {
+    height: 1px; margin: 0 36px 36px;
+    background: linear-gradient(to right, var(--accent) 0%, transparent 40%);
+    opacity: 0.35;
+  }
+
+  /* GRID */
+  .products {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px; background: var(--border);
+    margin: 0 36px;
+    border: 1px solid var(--border);
+  }
+
+  /* CARD */
+  .card {
+    background: var(--surface);
+    display: flex; flex-direction: column;
+    position: relative; overflow: hidden;
+    transition: background 0.22s;
+  }
+  .card:hover { background: #1c1c1c; }
+  .card-img-wrap { position: relative; aspect-ratio: 3/2; overflow: hidden; }
+  .card img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    filter: brightness(0.82) saturate(0.75);
+    transition: transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.4s;
+  }
+  .card:hover img { transform: scale(1.07); filter: brightness(1) saturate(1); }
+  .card-badge {
+    position: absolute; bottom: 12px; left: 12px;
+    background: var(--accent); color: #fff;
+    font-size: 9px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 3px 8px;
+    opacity: 0; transform: translateY(4px); transition: all 0.22s;
+  }
+  .card:hover .card-badge { opacity: 1; transform: translateY(0); }
+  .card-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .card-name { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 0.06em; line-height: 1; }
+  .card-desc { font-size: 12px; color: var(--muted); letter-spacing: 0.03em; line-height: 1.5; }
+  .card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: auto; padding-top: 8px; border-top: 1px solid var(--border);
+  }
+  .card-btn {
+    background: none; border: 1px solid var(--accent); color: var(--accent);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+    padding: 6px 14px; cursor: pointer; transition: all 0.18s;
+  }
+  .card-btn:hover { background: var(--accent); color: #fff; }
+  .card-arrow {
+    width: 26px; height: 26px; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 14px; transition: all 0.18s;
+  }
+  .card:hover .card-arrow { border-color: var(--accent); color: var(--accent); transform: translateX(3px); }
+
+  /* FOOTER */
+  footer {
+    margin-top: 56px; border-top: 1px solid var(--border);
+    padding: 22px 36px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-brand { font-family: 'Bebas Neue', sans-serif; font-size: 17px; letter-spacing: 0.1em; color: var(--muted); }
+  .footer-copy { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card { animation: fadeUp 0.5s ease both; }
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.13s; }
+  .card:nth-child(3) { animation-delay: 0.21s; }
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <div class="nav-brand">🎸 Guitar<span>Shop</span></div>
+  <div class="nav-links">
+    <a href="#">Home</a>
+    <a href="#">About</a>
+    <a href="#">Services</a>
+    <a href="#">Contact</a>
+    <div class="nav-auth" id="auth-area">
+      <!-- Django template logic rendered as logged-out by default for preview -->
+         {% if request.user.is_authenticated %}
+            <!-- Stare autentificat -->
+            <span>Hello {{ request.user.username }}</span>
+            <a href="{% url 'logout' %}" class="nav-auth a btn-filled">Logout</a>
+        {% else %}
+            <!-- Stare neautentificat -->
+            <a href="/signin/" class="nav-auth a btn-outline">Sign In</a>
+            <a href="/signin/" class="nav-auth a btn-filled">Login</a>
+            
+        {% endif %}
+      
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Est. 2010 — Premium Instruments</div>
+    <h1>Best<br><em>Guitar Store</em></h1>
+    <p class="hero-sub">Electric &nbsp;·&nbsp; Acoustic &nbsp;·&nbsp; Bass</p>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="section-header">
+  <div class="section-title">Shop by Category</div>
+  <div class="section-count">3 CATEGORIES</div>
+</div>
+<div class="divider"></div>
+
+<div class="products">
+
+  <div class="card">
+    <div class="card-img-wrap">
+      <img src="https://cdn.connectsites.net/user_files/esp/articles/002/014/603/original.jpg?1609774690&height=1200&width=1200" alt="Electric Guitar">
+      <div class="card-badge">Electric</div>
+    </div>
+    <div class="card-body">
+      <div class="card-name">Electric Guitar</div>
+      <div class="card-desc">High-output pickups, fast necks, and aggressive tones built for every style.</div>
+      <div class="card-footer">
+        <a href="{% url 'electric' %}">
+            <button class="card-btn">Buy</button>
+        </a>
+        
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-img-wrap">
+      <img src="https://guitarfactory.net/cdn/shop/collections/Menu-Guitars-Acoustic-004.jpg?v=1711515615" alt="Acoustic Guitar">
+      <div class="card-badge">Acoustic</div>
+    </div>
+    <div class="card-body">
+      <div class="card-name">Acoustic Guitar</div>
+      <div class="card-desc">Natural resonance and rich warmth — from parlour to dreadnought.</div>
+      <div class="card-footer">
+        <a href="{% url 'acoustic' %}">
+            <button class="card-btn">Buy</button>
+        </a>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-img-wrap">
+      <img src="https://www.normans.co.uk/cdn/shop/products/B097HR1LDT.PT05_800x.jpg?v=1689946162" alt="Bass Guitar">
+      <div class="card-badge">Bass</div>
+    </div>
+    <div class="card-body">
+      <div class="card-name">Bass Guitar</div>
+      <div class="card-desc">Lock in the groove. Active and passive options across all price ranges.</div>
+      <div class="card-footer">
+         <a href="{% url 'bass' %}">
+            <button class="card-btn">Buy</button>
+        </a>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">GuitarShop</div>
+  <div class="footer-copy">© 2026 GuitarShop</div>
+</footer>
+
+</body>
+</html>

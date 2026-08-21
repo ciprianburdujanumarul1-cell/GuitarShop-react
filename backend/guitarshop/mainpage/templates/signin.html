@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sign Up</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0a;
+  --card: #181818;
+  --accent: #e85d04;
+  --text: #f0ece3;
+  --muted: #666;
+  --border: #222;
+  --input-bg: #0f0f0f;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow Condensed', sans-serif;
+  min-height: 100vh;
+}
+
+/* NAV */
+nav {
+  position: sticky;
+  top: 0;
+  background: rgba(10,10,10,0.95);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+}
+
+.nav-brand {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+}
+
+.nav-brand span {
+  color: var(--accent);
+}
+
+nav a {
+  color: var(--muted);
+  text-decoration: none;
+  margin-left: 15px;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+nav a:hover {
+  color: var(--text);
+}
+
+/* PAGE */
+.page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 50px 20px;
+}
+
+/* CARD */
+.card {
+  background: var(--card);
+  padding: 35px;
+  width: 100%;
+  max-width: 380px;
+  border: 1px solid var(--border);
+}
+
+/* TITLE */
+.card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+/* ERROR */
+.error {
+  color: red;
+  margin-bottom: 10px;
+}
+
+/* FIELDS */
+input {
+  width: 100%;
+  padding: 11px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+}
+
+input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* BUTTON */
+button {
+  width: 100%;
+  padding: 12px;
+  background: var(--accent);
+  border: none;
+  color: white;
+  font-family: 'Bebas Neue', sans-serif;
+  letter-spacing: 2px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #d05203;
+}
+
+/* FOOTER */
+.footer {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+</style>
+</head>
+
+<body>
+
+<nav>
+  <div class="nav-brand">🎸 Guitar<span>Shop</span></div>
+  <div>
+    <a href="/">Home</a>
+    <a href="/login/">Login</a>
+  </div>
+</nav>
+
+<div class="page">
+
+<form class="card" method="post">
+  {% csrf_token %}
+
+  <div class="card-title">Sign Up</div>
+
+  {% if error %}
+    <div class="error">{{ error }}</div>
+  {% endif %}
+
+  <input type="text" name="username" placeholder="Username" required>
+  <input type="email" name="email" placeholder="Email" required>
+  <input type="password" name="password" placeholder="Password" required>
+
+  <input type="text" name="country" placeholder="Country">
+  <input type="text" name="city" placeholder="City">
+  <input type="text" name="address" placeholder="Address">
+  <input type="text" name="postal_code" placeholder="Postal Code">
+
+  <button type="submit">Sign Up</button>
+
+  <div class="footer">
+    Already have an account? <a href="/login/">Login</a>
+  </div>
+
+</form>
+
+</div>
+
+</body>
+</html>

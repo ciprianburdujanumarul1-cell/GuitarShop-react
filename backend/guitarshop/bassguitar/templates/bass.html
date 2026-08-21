@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bass Guitars</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111;
+    --card-bg: #141414;
+    --accent: #e85d04;
+    --accent2: #ff9a00;
+    --text: #f0ece3;
+    --muted: #666;
+    --border: #222;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,10,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 40px;
+    height: 60px;
+  }
+
+  .nav-brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px;
+    letter-spacing: 0.1em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-brand span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 4px;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+  }
+
+  .nav-links a:hover {
+    color: var(--text);
+    border-color: var(--border);
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    height: 340px;
+    display: flex;
+    align-items: flex-end;
+    padding: 0 40px 40px;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: url("https://images.unsplash.com/photo-1558618666-fcd25c85cd64") center/cover no-repeat;
+    filter: brightness(0.3) saturate(0.6);
+    transform: scale(1.04);
+    transition: transform 8s ease;
+  }
+
+  .hero:hover .hero-bg { transform: scale(1.0); }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, var(--bg) 0%, transparent 50%),
+                linear-gradient(to right, rgba(232,93,4,0.12) 0%, transparent 60%);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .hero h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 8vw, 90px);
+    line-height: 0.9;
+    letter-spacing: 0.04em;
+    color: var(--text);
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 48px 40px 28px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    letter-spacing: 0.08em;
+  }
+
+  .section-count {
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, var(--accent), transparent);
+    margin: 0 40px;
+    margin-bottom: 40px;
+    opacity: 0.4;
+  }
+
+  /* GRID */
+  .products {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    margin: 0 40px;
+    border: 1px solid var(--border);
+  }
+
+  .card {
+    background: var(--card-bg);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+
+  .card:hover { background: #1a1a1a; }
+
+  .card-img-wrap {
+    position: relative;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+  }
+
+  .card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.85) saturate(0.8);
+    transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94), filter 0.4s;
+  }
+
+  .card:hover img {
+    transform: scale(1.06);
+    filter: brightness(1) saturate(1);
+  }
+
+  .card-tag {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: var(--accent);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: all 0.25s;
+  }
+
+  .card:hover .card-tag { opacity: 1; transform: translateY(0); }
+
+  .card-body {
+    padding: 18px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+  }
+
+  .card-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+    line-height: 1;
+  }
+
+  .card-desc {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    line-height: 1.5;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: auto;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+
+  .card-btn {
+    display: inline-block;
+    text-decoration: none;
+    background: none;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .card-btn:hover {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .card-arrow {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+
+  .card:hover .card-arrow {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateX(3px);
+  }
+
+  /* FOOTER */
+  footer {
+    margin-top: 60px;
+    border-top: 1px solid var(--border);
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .footer-brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+
+  .footer-copy {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 20px;
+  }
+
+  .footer-links a {
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--text); }
+
+  /* Fade-in animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card { animation: fadeUp 0.5s ease both; }
+  .card:nth-child(1) { animation-delay: 0.05s; }
+  .card:nth-child(2) { animation-delay: 0.10s; }
+  .card:nth-child(3) { animation-delay: 0.15s; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="{% url 'home' %}" style="text-decoration:none; color:inherit;">
+    <div class="nav-brand">🎸 Guitar<span>Shop</span></div>
+  </a>
+  <div class="nav-links">
+    <a href="#">Home</a>
+    <a href="#">About</a>
+    <a href="#">Services</a>
+    <a href="#">Contact</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <div class="hero-eyebrow">Collection 2026</div>
+    <h1>Bass<br><em>Guitars</em></h1>
+    <p class="hero-sub">Deep sound &amp; powerful groove — the backbone of every band</p>
+  </div>
+</div>
+
+<div class="section-header">
+  <div class="section-title">Browse Brands</div>
+  <div class="section-count">3 MODELS</div>
+</div>
+<div class="divider"></div>
+
+<div class="products">
+
+  <div class="card">
+    <div class="card-img-wrap">
+      <img src="https://www.normans.co.uk/cdn/shop/products/B097HR1LDT.PT05_800x.jpg" alt="Yamaha Bass">
+      <div class="card-tag">Clarity</div>
+    </div>
+    <div class="card-body">
+      <div class="card-name">Yamaha Bass</div>
+      <div class="card-desc">Solid low-end with great clarity.</div>
+      <div class="card-footer">
+        <a href="/products/yamaha_bass/" class="card-btn">Products</a>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-img-wrap">
+      <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPUC-kFKUJNGFGaptz5Ho7of66vPqP1YhCA7HCy26wUQ&s" alt="Ibanez Bass">
+      <div class="card-tag">Shred</div>
+    </div>
+    <div class="card-body">
+      <div class="card-name">Ibanez Bass</div>
+      <div class="card-desc">Fast neck and modern tone.</div>
+      <div class="card-footer">
+        <a href="/products/ibanez_bass/" class="card-btn">Products</a>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-img-wrap">
+      <img src="https://mississaugafineartsacademy.com/wp-content/uploads/2021/02/How-to-Tune-Bass-Guitar-Video.jpg" alt="Fender Jazz Bass">
+      <div class="card-tag">Classic</div>
+    </div>
+    <div class="card-body">
+      <div class="card-name">Fender Jazz Bass</div>
+      <div class="card-desc">Classic tone used in countless records.</div>
+      <div class="card-footer">
+        <a href="/products/fender_bass/" class="card-btn">Products</a>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="footer-brand">GuitarShop</div>
+  <div class="footer-links">
+    <a href="#">Privacy</a>
+    <a href="#">Terms</a>
+    <a href="#">Support</a>
+  </div>
+  <div class="footer-copy">© 2026 GuitarShop</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --card: #181818;
+    --accent: #e85d04;
+    --text: #f0ece3;
+    --muted: #666;
+    --border: #222;
+    --input-bg: #0f0f0f;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,10,10,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 36px; height: 58px;
+  }
+  .nav-brand {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px; letter-spacing: 0.1em;
+    display: flex; align-items: center; gap: 7px;
+  }
+  .nav-brand span { color: var(--accent); }
+  .nav-links { display: flex; align-items: center; gap: 2px; }
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+    padding: 5px 12px; border: 1px solid transparent; transition: all 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); border-color: var(--border); }
+
+  /* PAGE */
+  .page {
+    min-height: calc(100vh - 58px);
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+    padding: 40px 20px;
+  }
+
+  /* subtle background texture */
+  .page::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 20% 50%, rgba(232,93,4,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 80% 50%, rgba(232,93,4,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* FORM CARD */
+  .login-card {
+    position: relative; z-index: 1;
+    background: var(--card);
+    border: 1px solid var(--border);
+    width: 100%; max-width: 360px;
+    padding: 40px 36px 36px;
+    animation: fadeUp 0.45s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* accent strip at top */
+  .login-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(to right, var(--accent), transparent);
+  }
+
+  .card-eyebrow {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.26em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-eyebrow::before { content: ''; display: block; width: 22px; height: 1px; background: var(--accent); }
+
+  .card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px; letter-spacing: 0.06em; line-height: 1;
+    margin-bottom: 28px;
+  }
+
+  /* FIELDS */
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .field label {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--muted);
+  }
+  .field input {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 15px; font-weight: 300; letter-spacing: 0.04em;
+    padding: 11px 14px;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    width: 100%;
+  }
+  .field input::placeholder { color: #444; }
+  .field input:focus { border-color: var(--accent); background: #111; }
+
+  /* SUBMIT */
+  .submit-btn {
+    width: 100%; margin-top: 8px;
+    background: var(--accent); border: none; color: #fff;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px; letter-spacing: 0.12em;
+    padding: 13px;
+    cursor: pointer; transition: background 0.18s, transform 0.12s;
+  }
+  .submit-btn:hover { background: #d05203; }
+  .submit-btn:active { transform: scale(0.99); }
+
+  /* FOOTER LINK */
+  .card-footer {
+    margin-top: 20px; padding-top: 18px;
+    border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--muted); letter-spacing: 0.04em;
+    text-align: center;
+  }
+  .card-footer a {
+    color: var(--accent); text-decoration: none; font-weight: 600;
+    transition: opacity 0.2s;
+  }
+  .card-footer a:hover { opacity: 0.8; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">🎸 Guitar<span>Shop</span></div>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/signin/">Sign In</a>
+  </div>
+</nav>
+
+<div class="page">
+  <form class="login-card" method="post">
+    {% csrf_token %}
+
+    <div class="card-eyebrow">Member Access</div>
+    <div class="card-title">Login</div>
+
+    <div class="field">
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" placeholder="you@example.com">
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" placeholder="••••••••">
+    </div>
+
+    <button type="submit" class="submit-btn">Login</button>
+
+    <div class="card-footer">
+      No account? <a href="/signin/">Sign up</a>
+    </div>
+  </form>
+</div>
+
+</body>
+</html>
