@@ -12,6 +12,12 @@ urlpatterns = [
     path('auth/refresh/', TokenRefreshView.as_view(), name='refresh'),
     path('auth/me/', views.MeView.as_view(), name='me'),
 
+    # 2FA
+    path('auth/2fa/setup/', views.TwoFactorSetupView.as_view(), name='2fa_setup'),
+    path('auth/2fa/confirm/', views.TwoFactorConfirmView.as_view(), name='2fa_confirm'),
+    path('auth/2fa/status/', views.TwoFactorStatusView.as_view(), name='2fa_status'),
+
+
     # products
     path('products/<str:brand>/', views.ProductListView.as_view(), name='product_list'),
     path('products/detail/<int:id>/', views.ProductDetailView.as_view(), name='product_detail'),

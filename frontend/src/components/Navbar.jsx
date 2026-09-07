@@ -43,6 +43,7 @@ export default function Navbar() {
           {user ? (
             <>
               <span>Hello {user.username}</span>
+              <Link to="/account/2fa" className="btn-outline">2FA</Link>
               <button className="btn-filled" onClick={logout}>Logout</button>
             </>
           ) : (

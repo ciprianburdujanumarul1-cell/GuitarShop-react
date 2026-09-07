@@ -107,27 +107,34 @@ class RegisterSerializer(serializers.Serializer):
 
 
 class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Login with email + password instead of username, mirroring the
-    original mainpage.views.l behaviour."""
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Swap the inherited 'username' field for 'email'
         self.fields.pop(self.username_field, None)
         self.fields['email'] = serializers.EmailField()
 
     def validate(self, attrs):
         from django.contrib.auth import authenticate
+        from django.contrib.auth.hashers import check_password
 
         email = attrs.get('email')
         password = attrs.get('password')
+        code = self.initial_data.get('code')
+
         user_obj = User.objects.filter(email=email).first()
         if user_obj is None:
+            check_password(password, '!')  # consumă timp similar cu un hash real
             raise serializers.ValidationError('Invalid email or password')
 
         user = authenticate(username=user_obj.username, password=password)
         if user is None:
             raise serializers.ValidationError('Invalid email or password')
+
+        device = getattr(user, 'twofa', None)
+        if device and device.is_enabled:
+            if not code:
+                raise serializers.ValidationError({'requires_2fa': True})
+            if not device.get_totp().verify(code, valid_window=1):
+                raise serializers.ValidationError('Cod 2FA invalid.')
 
         refresh = self.get_token(user)
         return {

@@ -1,16 +1,17 @@
-import { Routes, Route } from 'react-router-dom'
-import Navbar from './components/Navbar'
-import ProtectedRoute from './components/ProtectedRoute'
-import Home from './pages/Home'
-import Category from './pages/Category'
-import Products from './pages/Products'
-import ProductDetail from './pages/ProductDetail'
-import Cart from './pages/Cart'
-import CheckoutSuccess from './pages/CheckoutSuccess'
-import CheckoutCancel from './pages/CheckoutCancel'
-import Wishlist from './pages/Wishlist'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
+import { Routes, Route } from "react-router-dom";
+import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Home from "./pages/Home";
+import Category from "./pages/Category";
+import Products from "./pages/Products";
+import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
+import CheckoutSuccess from "./pages/CheckoutSuccess";
+import CheckoutCancel from "./pages/CheckoutCancel";
+import Wishlist from "./pages/Wishlist";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import TwoFactorSetup from "./components/TwoFactorSetup";
 
 export default function App() {
   return (
@@ -20,7 +21,14 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signin" element={<Signup />} />
-
+        <Route
+          path="/account/2fa"
+          element={
+            <ProtectedRoute>
+              <TwoFactorSetup />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/:category" element={<Category />} />
 
         <Route
@@ -75,5 +83,5 @@ export default function App() {
         <Route path="*" element={<Home />} />
       </Routes>
     </>
-  )
+  );
 }

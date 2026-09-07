@@ -28,11 +28,24 @@ export function AuthProvider({ children }) {
     loadMe()
   }, [loadMe])
 
-  async function login(email, password) {
-    const { data } = await api.post('/auth/login/', { email, password })
-    setTokens({ access: data.access, refresh: data.refresh })
-    setUser(data.user)
-    return data.user
+  async function login(email, password, code) {
+    try {
+      const { data } = await api.post('/auth/login/', { email, password, code })
+      setTokens({ access: data.access, refresh: data.refresh })
+      setUser(data.user)
+      return data.user
+    } catch (err) {
+      console.log('LOGIN ERROR:', err.response?.status, err.response?.data)
+      const errData = err.response?.data
+      const requires2FA = Array.isArray(errData?.requires_2fa)
+        ? errData.requires_2fa[0]
+        : errData?.requires_2fa
+
+      if (requires2FA) {
+        return { requires_2fa: true }
+      }
+      throw err
+    }
   }
 
   async function register(payload) {

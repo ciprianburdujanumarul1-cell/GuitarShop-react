@@ -1,6 +1,7 @@
 import json
 from decimal import Decimal
-
+import pyotp, qrcode, io, base64
+from mainpage.models import TwoFactorDevice
 import stripe
 from django.conf import settings
 from rest_framework import generics, permissions, status
@@ -21,20 +22,54 @@ from .serializers import (
 
 # ── AUTH ──────────────────────────────────────────────
 
+class TwoFactorStatusView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        device = getattr(request.user, 'twofa', None)
+        return Response({'is_enabled': bool(device and device.is_enabled)})
+class TwoFactorSetupView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        device, _ = TwoFactorDevice.objects.get_or_create(user=request.user)
+        totp = device.get_totp()
+        uri = totp.provisioning_uri(name=request.user.email, issuer_name="GuitarShop")
+
+        img = qrcode.make(uri)
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        qr_b64 = base64.b64encode(buf.getvalue()).decode()
+
+        return Response({'qr_code': f'data:image/png;base64,{qr_b64}', 'secret': device.secret})
+
+
+class TwoFactorConfirmView(APIView):
+    throttle_scope = '2fa'
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        code = request.data.get('code')
+        device = TwoFactorDevice.objects.filter(user=request.user).first()
+        if not device or not device.get_totp().verify(code, valid_window=1):
+            return Response({'detail': 'Cod invalid.'}, status=400)
+        device.is_enabled = True
+        device.save()
+        return Response({'detail': '2FA activat.'})
 class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
     serializer_class = RegisterSerializer
-
+    throttle_scope = 'register'
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response({'detail': 'Account created'}, status=status.HTTP_201_CREATED)
 
-
 class EmailTokenObtainPairView(TokenObtainPairView):
     permission_classes = [permissions.AllowAny]
     serializer_class = EmailTokenObtainPairSerializer
+    throttle_scope = 'login'
 
 
 class MeView(APIView):
@@ -159,7 +194,7 @@ class CheckoutView(APIView):
     and returns its hosted URL. Stock is only decremented once Stripe
     confirms payment (see payments.views.stripe_webhook) — not here — so an
     abandoned or failed payment never touches inventory."""
-
+    throttle_scope = 'checkout'
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
