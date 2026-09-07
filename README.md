@@ -20,9 +20,11 @@ guitarshop-react/
 - Coșul de cumpărături nu mai stă în sesiunea Django, ci în `localStorage`
   pe frontend; backend-ul doar calculează totalurile (`/api/cart/quote/`)
   și validează stocul la finalizarea comenzii (`/api/cart/checkout/`).
-- Review-urile live tot merg prin WebSocket (Django Channels), doar că
-  username-ul e trimis acum de client (JWT nu are sesiune de canal), nu
-  mai e citit din `scope["user"]`.
+- Review-urile live merg prin WebSocket (Django Channels), autentificat cu
+  JWT: frontend-ul trimite tokenul ca query param la conectare
+  (`?token=<access>`), iar backend-ul validează tokenul înainte de a
+  accepta conexiunea. Username-ul recenziei vine mereu din tokenul
+  validat pe server, niciodată din ce trimite clientul.
 - Template-urile Django (`.html`) rămân în proiect neatinse, dar nu mai
   sunt folosite — tot UI-ul e acum în React.
 
@@ -37,7 +39,10 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-Backend-ul pornește pe `http://127.0.0.1:8000`.
+Backend-ul pornește pe `http://127.0.0.1:8000` folosind Daphne (server
+ASGI, necesar pentru WebSocket) — asigură-te că `daphne` e prima intrare
+din `INSTALLED_APPS` în `settings.py`, altfel `runserver` pornește
+serverul WSGI clasic și rutele WebSocket nu funcționează.
 
 > Notă: `payments/views.py` importă `stripe`. E deja în `requirements.txt`,
 > dar dacă nu folosești plățile, poți ignora acel modul.
@@ -65,12 +70,32 @@ Modifică-l dacă rulezi backend-ul pe alt port/host.
 
 - `/api/auth/register/` — creează cont (username, email, parolă, adresă)
 - `/api/auth/login/` — primește `{ email, password }`, întoarce `access` +
-  `refresh` token (JWT)
+  `refresh` token (JWT). Salvate în `localStorage` sub cheile `access` și
+  `refresh`.
 - Token-ul `access` e atașat automat la fiecare cerere din
   `src/api/client.js`; la un 401, se încearcă automat refresh cu token-ul
   `refresh`.
+- **2FA opțional**: userul poate activa autentificare în doi pași (TOTP,
+  compatibil Google Authenticator) din `/api/auth/2fa/setup/`. Dacă e
+  activ, login-ul cere și un cod suplimentar (`code`).
 - Rutele de produse/coș/wishlist din React sunt protejate
   (`ProtectedRoute`) — dacă nu ești logat, ești trimis la `/login`.
+- Conexiunile WebSocket (recenzii live) necesită și ele un token JWT
+  valid trimis ca query param la conectare — vezi `jwt_auth_middleware.py`
+  în app-ul `api`.
+
+## Rate limiting
+
+Toate endpoint-urile sensibile sunt protejate cu throttling
+(`DEFAULT_THROTTLE_RATES` în `settings.py`):
+
+| Endpoint | Limită |
+|---|---|
+| Login | 5/min |
+| 2FA confirm | 5/min |
+| Register | 3/oră |
+| Checkout | 10/min |
+| Restul endpoint-urilor autentificate | 60/min |
 
 ## Structura paginilor React
 
@@ -92,3 +117,7 @@ Modifică-l dacă rulezi backend-ul pe alt port/host.
 - Pagina de detaliu produs presupune că brand-ul e cunoscut de frontend
   (`src/config/catalog.js`) — dacă adaugi branduri noi în baza de date,
   actualizează și fișierul acela.
+- View-urile Django clasice din `products/views.py` (server-rendered,
+  neconectate la React) ar trebui verificate — dacă nu mai sunt folosite
+  în `urls.py`, e mai sigur să fie șterse decât lăsate active în paralel
+  cu API-ul DRF.
