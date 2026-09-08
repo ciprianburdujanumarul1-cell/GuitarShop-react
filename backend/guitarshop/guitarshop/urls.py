@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-
+from payments import views as payments_views
 urlpatterns = [
     path("api/", include("api.urls")),
     path("", include("mainpage.urls")),
@@ -12,6 +12,9 @@ urlpatterns = [
     path("acoustic/", include("acousticguitar.urls")),
     path("bass/", include("bassguitar.urls")),
     path("payments/", include("payments.urls")),
+    
+
+    path("checkout/session/<str:session_id>/", payments_views.session_status, name="checkout_session_status"),
     path("cart/", include("cart.urls")),
     path("admin/", admin.site.urls),
 ]
