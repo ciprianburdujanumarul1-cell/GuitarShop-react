@@ -44,8 +44,10 @@ ASGI, necesar pentru WebSocket) — asigură-te că `daphne` e prima intrare
 din `INSTALLED_APPS` în `settings.py`, altfel `runserver` pornește
 serverul WSGI clasic și rutele WebSocket nu funcționează.
 
-> Notă: `payments/views.py` importă `stripe`. E deja în `requirements.txt`,
-> dar dacă nu folosești plățile, poți ignora acel modul.
+> Notă: `payments/views.py` importă `stripe`. E deja în `requirements.txt`.
+> Pentru ca stocul să se actualizeze corect după o plată, vezi secțiunea
+> „Configurare Stripe" mai jos — fără `stripe listen` pornit local,
+> plățile trec prin Stripe dar stocul nu se scade niciodată.
 
 ## Rulare — Frontend (React)
 
@@ -65,6 +67,48 @@ VITE_WS_URL=ws://127.0.0.1:8000
 ```
 
 Modifică-l dacă rulezi backend-ul pe alt port/host.
+
+## Configurare Stripe (plăți de test)
+
+Checkout-ul creează o sesiune Stripe reală (`api/views.py:CheckoutView`), dar
+scăderea stocului se face abia după confirmarea plății, printr-un webhook
+(`payments/views.py:stripe_webhook`). Local, Stripe nu poate trimite acest
+webhook direct către `localhost` — ai nevoie de Stripe CLI ca intermediar.
+
+**O singură dată** (autentificare + selectare cont):
+
+```bash
+stripe login
+stripe switch context
+```
+
+Din meniul afișat, alege contul de test, ex. **GuitarShop sandbox** — nu
+`live`. Selecția rămâne activă pentru sesiunile viitoare de terminal.
+
+**De fiecare dată când testezi o plată**, într-un terminal separat, lăsat
+deschis pe tot parcursul testului:
+
+```bash
+stripe listen --forward-to localhost:8000/payments/webhook/
+```
+
+La pornire afișează un secret de forma `whsec_...` — copiază-l în `.env`
+(sau `settings.py`) la `STRIPE_WEBHOOK_SECRET`, apoi **repornește Django**
+ca să încarce noua valoare. Acest secret se schimbă la fiecare pornire a
+`stripe listen`, dacă nu ai definit un endpoint fix în Dashboard.
+
+Testează cu cardul `4242 4242 4242 4242`, orice dată viitoare, orice CVC.
+În terminalul `stripe listen` ar trebui să apară `checkout.session.completed`
+urmat de `200`; dacă apare `400`, secretul din `.env` nu se potrivește cu
+cel afișat la pornirea curentă a listener-ului.
+
+> Notă: dacă `stripe switch context` revine mereu la `live`, forțează
+> sandbox-ul direct fără să depinzi de context activ:
+> ```bash
+> stripe listen --forward-to localhost:8000/payments/webhook/ --api-key sk_test_...
+> ```
+> (cheia de test se ia din Dashboard → Developers → API keys, cu toggle-ul
+> pe Sandbox).
 
 ## Cum funcționează autentificarea
 
@@ -112,12 +156,10 @@ Toate endpoint-urile sensibile sunt protejate cu throttling
 
 ## Ce merită continuat
 
-- Legarea reală a checkout-ului de Stripe (`payments/` există în backend,
-  dar nu e conectat încă la fluxul din React).
 - Pagina de detaliu produs presupune că brand-ul e cunoscut de frontend
   (`src/config/catalog.js`) — dacă adaugi branduri noi în baza de date,
   actualizează și fișierul acela.
-- View-urile Django clasice din `products/views.py` (server-rendered,
-  neconectate la React) ar trebui verificate — dacă nu mai sunt folosite
-  în `urls.py`, e mai sigur să fie șterse decât lăsate active în paralel
-  cu API-ul DRF.
+- View-urile Django clasice din `products/views.py`, `cart/views.py`
+  (server-rendered, neconectate la React) ar trebui verificate — dacă nu
+  mai sunt folosite în `urls.py`, e mai sigur să fie șterse decât lăsate
+  active în paralel cu API-ul DRF.

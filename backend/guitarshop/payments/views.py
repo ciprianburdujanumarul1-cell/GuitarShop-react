@@ -4,6 +4,7 @@ import logging
 
 import stripe
 from django.conf import settings
+from django.db.models import F
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -12,7 +13,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from products.models import Product
-from .models import StripeEvent
+from orders.models import Order  # <- nou, modelul de comandă
 
 logger = logging.getLogger(__name__)
 
@@ -22,43 +23,52 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 @csrf_exempt
 @require_POST
 def stripe_webhook(request):
-    # ... rămâne exact cum era la tine, neschimbat ...
     payload = request.body
     sig_header = request.META.get('HTTP_STRIPE_SIGNATURE')
 
-    if settings.STRIPE_WEBHOOK_SECRET and sig_header:
-        try:
-            event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
-        except (ValueError, stripe.error.SignatureVerificationError) as e:
-            logger.warning("Invalid Stripe webhook signature: %s", e)
-            return HttpResponse(status=400)
-    else:
-        try:
-            event = json.loads(payload)
-        except ValueError:
-            return HttpResponse(status=400)
+    # Schimbare 1: nu mai există fallback fără verificare de semnătură.
+    # Fără STRIPE_WEBHOOK_SECRET configurat, endpoint-ul refuză cererea în
+    # loc să accepte orice JSON ca eveniment Stripe valid.
+    if not settings.STRIPE_WEBHOOK_SECRET:
+        logger.error("STRIPE_WEBHOOK_SECRET is not configured — refusing webhook.")
+        return HttpResponse(status=500)
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, settings.STRIPE_WEBHOOK_SECRET)
+    except (ValueError, stripe.error.SignatureVerificationError) as e:
+        logger.warning("Invalid Stripe webhook signature: %s", e)
+        return HttpResponse(status=400)
 
     event_type = event['type']
 
     if event_type == 'checkout.session.completed':
         session = event['data']['object']
-        session_id = session['id']
+        session_dict = session.to_dict() if hasattr(session, 'to_dict') else session
+        session_id = session_dict['id']
 
-        _, created = StripeEvent.objects.get_or_create(session_id=session_id)
-        if not created:
+        if Order.objects.filter(stripe_session_id=session_id).exists():
             return HttpResponse(status=200)
 
-        metadata = session.get('metadata') if isinstance(session, dict) else session.to_dict().get('metadata', {})
+        metadata = session_dict.get('metadata', {})
         cart = json.loads(metadata.get('cart', '{}'))
+        address = json.loads(metadata.get('address', '{}'))
 
         for product_id, qty in cart.items():
-            try:
-                product = Product.objects.get(id=product_id)
-            except Product.DoesNotExist:
-                continue
+            Product.objects.filter(id=product_id).update(stock=F('stock') - int(qty))
 
-            product.stock = max(product.stock - int(qty), 0)
-            product.save(update_fields=['stock'])
+        Order.objects.create(
+            user_id=metadata.get('user_id'),
+            stripe_session_id=session_id,
+            items=cart,
+            full_name=address.get('fullName', ''),
+            address_line1=address.get('line1', ''),
+            address_line2=address.get('line2', ''),
+            city=address.get('city', ''),
+            postal_code=address.get('postalCode', ''),
+            country=metadata.get('country', ''),
+            vat_rate=metadata.get('vat_rate', '0'),
+            amount_total=(session_dict.get('amount_total') or 0) / 100,
+        )
 
     return HttpResponse(status=200)
 
