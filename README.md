@@ -27,6 +27,12 @@ guitarshop-react/
   validat pe server, niciodată din ce trimite clientul.
 - Template-urile Django (`.html`) rămân în proiect neatinse, dar nu mai
   sunt folosite — tot UI-ul e acum în React.
+- Selectul de țară din `/cart` (adresa de livrare) nu mai e un `<select>`
+  HTML nativ, ci o componentă custom (`CountrySelect.jsx`) — necesar
+  pentru că highlight-ul de hover/selecție dintr-un `<select>` nativ e
+  desenat de browser/OS și nu poate fi stilizat cu CSS. Componenta ține
+  aceeași listă de țări și valoarea selectată se comportă la fel pentru
+  restul formularului (`address.country`).
 
 ## Rulare — Backend (Django)
 
@@ -110,6 +116,26 @@ cel afișat la pornirea curentă a listener-ului.
 > (cheia de test se ia din Dashboard → Developers → API keys, cu toggle-ul
 > pe Sandbox).
 
+### Snapshot-ul comenzii (`Order.items`)
+
+`Order.items` (`JSONField`) salvează la momentul confirmării plății, în
+`stripe_webhook`, un dicționar `{product_name: qty}` — nu `{product_id: qty}`.
+Motivul: dacă numele unui produs se schimbă ulterior, comanda veche
+păstrează denumirea de la momentul cumpărării.
+
+Decrementarea stocului (`Product.objects.filter(id=...).update(...)`) tot
+pe `product_id` se face, folosind coșul original din `metadata` — abia
+după aceea se construiește dicționarul cu nume, dintr-un singur query
+(`Product.objects.filter(id__in=cart.keys())`), pentru salvat în `Order`.
+
+Comenzile create **înainte** de această schimbare au rămas cu `product_id`
+ca și cheie în `items` — nu se recalculează retroactiv.
+
+În Django admin (`orders/admin.py`), coloana `Items` din lista de comenzi
+nu mai afișează JSON-ul brut, ci un `items_display` custom (`ModelAdmin`)
+care randează fiecare produs pe rând propriu, cu `×` între nume și
+cantitate.
+
 ## Cum funcționează autentificarea
 
 - `/api/auth/register/` — creează cont (username, email, parolă, adresă)
@@ -163,3 +189,7 @@ Toate endpoint-urile sensibile sunt protejate cu throttling
   (server-rendered, neconectate la React) ar trebui verificate — dacă nu
   mai sunt folosite în `urls.py`, e mai sigur să fie șterse decât lăsate
   active în paralel cu API-ul DRF.
+- Comenzile vechi (create înainte de trecerea la `{product_name: qty}`)
+  rămân cu `product_id` ca și cheie în `items` — dacă e nevoie de
+  consistență istorică (ex. rapoarte pe nume de produs), ar trebui o
+  migrare de date care să le convertească retroactiv.
