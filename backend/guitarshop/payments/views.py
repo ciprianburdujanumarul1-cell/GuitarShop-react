@@ -50,16 +50,25 @@ def stripe_webhook(request):
             return HttpResponse(status=200)
 
         metadata = session_dict.get('metadata', {})
-        cart = json.loads(metadata.get('cart', '{}'))
+        cart = json.loads(metadata.get('cart', '{}'))  # {product_id: qty}
         address = json.loads(metadata.get('address', '{}'))
 
+        # decrementăm stocul folosind id-urile, ca înainte
         for product_id, qty in cart.items():
             Product.objects.filter(id=product_id).update(stock=F('stock') - int(qty))
+
+        # construim snapshot-ul cu nume, pentru salvat în Order.items
+        products = Product.objects.filter(id__in=cart.keys())
+        id_to_name = {str(p.id): p.name for p in products}
+        items_by_name = {
+            id_to_name.get(product_id, f"Produs #{product_id}"): qty
+            for product_id, qty in cart.items()
+        }
 
         Order.objects.create(
             user_id=metadata.get('user_id'),
             stripe_session_id=session_id,
-            items=cart,
+            items=items_by_name,
             full_name=address.get('fullName', ''),
             address_line1=address.get('line1', ''),
             address_line2=address.get('line2', ''),

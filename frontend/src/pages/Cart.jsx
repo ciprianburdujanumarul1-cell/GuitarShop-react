@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../api/client";
 import { useCart } from "../context/CartContext";
 import Footer from "../components/Footer";
-
+import CountrySelect from "../components/CountrySelect";
 const EMPTY_ADDRESS = {
   fullName: "",
   line1: "",
@@ -181,43 +181,13 @@ export default function Cart() {
                       style={{ flex: 1 }}
                     />
                   </div>
-                  <select
-                    className="custom-scroll"
-                    placeholder="Country"
+                  <CountrySelect
                     value={address.country}
-                    onChange={handleAddressChange("country")}
+                    onChange={(val) =>
+                      setAddress((prev) => ({ ...prev, country: val }))
+                    }
                     required
-                  >
-                    <option value="">Choose one</option>
-                    <option value="md">Moldova</option>
-                    <option value="at">Austria</option>
-                    <option value="be">Belgium</option>
-                    <option value="bg">Bulgaria</option>
-                    <option value="hr">Croatia</option>
-                    <option value="cy">Cyprus</option>
-                    <option value="cz">Czech Republic</option>
-                    <option value="dk">Denmark</option>
-                    <option value="ee">Estonia</option>
-                    <option value="fi">Finland</option>
-                    <option value="fr">France</option>
-                    <option value="de">Germany</option>
-                    <option value="gr">Greece</option>
-                    <option value="hu">Hungary</option>
-                    <option value="ie">Ireland</option>
-                    <option value="it">Italy</option>
-                    <option value="lv">Latvia</option>
-                    <option value="lt">Lithuania</option>
-                    <option value="lu">Luxembourg</option>
-                    <option value="mt">Malta</option>
-                    <option value="nl">Netherlands</option>
-                    <option value="pl">Poland</option>
-                    <option value="pt">Portugal</option>
-                    <option value="ro">Romania</option>
-                    <option value="sk">Slovakia</option>
-                    <option value="si">Slovenia</option>
-                    <option value="es">Spain</option>
-                    <option value="se">Sweden</option>
-                  </select>
+                  />
                 </div>
               </div>
 
