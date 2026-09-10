@@ -170,7 +170,27 @@ class CartQuoteView(APIView):
             product = Product.objects.filter(id=product_id).first()
             if not product:
                 continue
-            qty = int(qty)
+
+            try:
+                qty = int(qty)
+            except (TypeError, ValueError):
+                return Response(
+                    {"detail": f"Invalid quantity for product {product_id}."},
+                    status=400
+                )
+
+            if qty <= 0:
+                return Response(
+                    {"detail": f"Quantity must be positive for product {product_id}."},
+                    status=400
+                )
+
+            if qty > product.stock:
+                return Response(
+                    {"detail": f"Not enough stock for {product.name}. Available: {product.stock}."},
+                    status=400
+                )
+
             line_total = product.price * qty
             subtotal += line_total
             items.append({
@@ -189,9 +209,7 @@ class CartQuoteView(APIView):
             'vat_rate': str(vat_rate),
             'total': str(total),
         })
-
 stripe.api_key = settings.STRIPE_SECRET_KEY
-
 
 class CheckoutView(APIView):
     throttle_scope = 'checkout'
@@ -214,7 +232,14 @@ class CheckoutView(APIView):
         subtotal = Decimal('0.00')
 
         for product_id, qty in cart.items():
-            qty = int(qty)
+            try:
+                qty = int(qty)
+            except (TypeError, ValueError):
+                return Response({'detail': 'Cantitate invalidă în coș.'}, status=400)
+
+            if qty <= 0:
+                return Response({'detail': 'Cantitatea trebuie să fie pozitivă.'}, status=400)
+
             product = Product.objects.filter(id=product_id).first()
             if not product:
                 return Response({'detail': 'Un produs din coș nu mai există.'}, status=400)

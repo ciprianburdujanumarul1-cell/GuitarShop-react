@@ -1,61 +1,55 @@
-# GuitarShop — React + Django REST conversion
+# GuitarShop
 
-Acest proiect e conversia site-ului GuitarShop din Django template-uri
-server-side într-un frontend React (Vite), care consumă un backend Django
-REST Framework + JWT.
+Magazin online de chitare. Era făcut inițial cu Django + template-uri
+server-side, acum e în curs de conversie la React (Vite) în față, cu
+Django ca API (DRF + JWT) în spate.
 
 ```
 guitarshop-react/
-├── backend/guitarshop/    ← proiectul Django original + API nou (app "api")
-└── frontend/               ← proiectul React (Vite)
+├── backend/guitarshop/    ← Django (proiectul vechi + app-ul nou "api")
+└── frontend/               ← React (Vite)
 ```
 
-## Ce s-a schimbat față de proiectul original
+## Ce am schimbat față de site-ul original
 
-- Am adăugat un app nou `api` în Django cu Django REST Framework +
-  `djangorestframework-simplejwt` pentru autentificare pe token (JWT),
-  în loc de sesiune. Login-ul folosește tot email + parolă, ca înainte.
-- Am adăugat `django-cors-headers`, configurat să accepte cereri de la
-  `http://localhost:5173` (dev server-ul Vite).
-- Coșul de cumpărături nu mai stă în sesiunea Django, ci în `localStorage`
-  pe frontend; backend-ul doar calculează totalurile (`/api/cart/quote/`)
-  și validează stocul la finalizarea comenzii (`/api/cart/checkout/`).
-- Review-urile live merg prin WebSocket (Django Channels), autentificat cu
-  JWT: frontend-ul trimite tokenul ca query param la conectare
-  (`?token=<access>`), iar backend-ul validează tokenul înainte de a
-  accepta conexiunea. Username-ul recenziei vine mereu din tokenul
-  validat pe server, niciodată din ce trimite clientul.
-- Template-urile Django (`.html`) rămân în proiect neatinse, dar nu mai
-  sunt folosite — tot UI-ul e acum în React.
-- Selectul de țară din `/cart` (adresa de livrare) nu mai e un `<select>`
-  HTML nativ, ci o componentă custom (`CountrySelect.jsx`) — necesar
-  pentru că highlight-ul de hover/selecție dintr-un `<select>` nativ e
-  desenat de browser/OS și nu poate fi stilizat cu CSS. Componenta ține
-  aceeași listă de țări și valoarea selectată se comportă la fel pentru
-  restul formularului (`address.country`).
+- Am băgat un app nou, `api`, cu Django REST Framework + JWT pentru login,
+  în loc de sesiune. Tot cu email + parolă te loghezi, doar mecanismul din
+  spate e diferit.
+- `django-cors-headers` ca să nu se plângă browserul când React (pe
+  `localhost:5173`) vorbește cu Django (pe `127.0.0.1:8000`).
+- Coșul stă acum în `localStorage`, nu în sesiunea Django. Backend-ul doar
+  calculează prețul (`/api/cart/quote/`) și verifică stocul la checkout.
+- Recenziile live merg pe WebSocket (Django Channels). Tokenul JWT se
+  trimite ca query param la conectare, iar numele userului la recenzie
+  vine din token, nu din ce trimite clientul — ca să nu poată cineva să
+  posteze cu alt nume.
+- Template-urile `.html` vechi au rămas în proiect dar nu se mai folosesc,
+  tot UI-ul e în React acum.
+- Am înlocuit `<select>`-ul de țară din checkout cu o componentă proprie
+  (`CountrySelect.jsx`), pentru că highlight-ul albastru de pe opțiunea
+  selectată dintr-un `<select>` nativ e desenat de browser, nu poți să-l
+  schimbi din CSS oricât ai încerca.
 
-## Rulare — Backend (Django)
+## Cum pornești backend-ul
 
 ```bash
 cd backend/guitarshop
 python -m venv venv
-.\venv\Scripts\Activate.ps1         # Windows: venv\Scripts\activate
+.\venv\Scripts\Activate.ps1         # pe Windows; pe altceva: venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 ```
 
-Backend-ul pornește pe `http://127.0.0.1:8000` folosind Daphne (server
-ASGI, necesar pentru WebSocket) — asigură-te că `daphne` e prima intrare
-din `INSTALLED_APPS` în `settings.py`, altfel `runserver` pornește
-serverul WSGI clasic și rutele WebSocket nu funcționează.
+Pornește pe `127.0.0.1:8000`, cu Daphne (server ASGI — trebuie neapărat,
+altfel nu merge WebSocket-ul). Verifică să fie `daphne` prima linie din
+`INSTALLED_APPS`, altfel `runserver` pornește WSGI clasic și recenziile
+live nu mai merg.
 
-> Notă: `payments/views.py` importă `stripe`. E deja în `requirements.txt`.
-> Pentru ca stocul să se actualizeze corect după o plată, vezi secțiunea
-> „Configurare Stripe" mai jos — fără `stripe listen` pornit local,
-> plățile trec prin Stripe dar stocul nu se scade niciodată.
+> `payments/views.py` are nevoie de `stripe`, e deja în requirements.
+> Dacă stocul nu se scade după plată, vezi mai jos la Stripe.
 
-## Rulare — Frontend (React)
+## Cum pornești frontend-ul
 
 ```bash
 cd frontend
@@ -63,133 +57,140 @@ npm install
 npm run dev
 ```
 
-Frontend-ul pornește pe `http://localhost:5173`.
-
-Fișierul `.env` din `frontend/` conține adresa backend-ului:
+Merge pe `localhost:5173`. În `.env` din `frontend/` ai adresa backend-ului:
 
 ```
 VITE_API_URL=http://127.0.0.1:8000
 VITE_WS_URL=ws://127.0.0.1:8000
 ```
 
-Modifică-l dacă rulezi backend-ul pe alt port/host.
+Schimbă-l dacă rulezi pe alt port.
 
-## Configurare Stripe (plăți de test)
+## Stripe (testare plăți)
 
-Checkout-ul creează o sesiune Stripe reală (`api/views.py:CheckoutView`), dar
-scăderea stocului se face abia după confirmarea plății, printr-un webhook
-(`payments/views.py:stripe_webhook`). Local, Stripe nu poate trimite acest
-webhook direct către `localhost` — ai nevoie de Stripe CLI ca intermediar.
+Checkout-ul creează o sesiune Stripe reală, dar stocul se scade abia
+după ce Stripe confirmă plata, printr-un webhook. Local, Stripe nu
+poate trimite webhook-ul direct la localhost, așa că ai nevoie de
+Stripe CLI pe post de intermediar.
 
-**O singură dată** (autentificare + selectare cont):
+O singură dată:
 
 ```bash
 stripe login
 stripe switch context
 ```
 
-Din meniul afișat, alege contul de test, ex. **GuitarShop sandbox** — nu
-`live`. Selecția rămâne activă pentru sesiunile viitoare de terminal.
+Alege contul de test (sandbox), nu `live`.
 
-**De fiecare dată când testezi o plată**, într-un terminal separat, lăsat
-deschis pe tot parcursul testului:
+De fiecare dată când testezi o plată, într-un terminal separat, lăsat
+pornit cât timp testezi:
 
 ```bash
 stripe listen --forward-to localhost:8000/payments/webhook/
 ```
 
-La pornire afișează un secret de forma `whsec_...` — copiază-l în `.env`
-(sau `settings.py`) la `STRIPE_WEBHOOK_SECRET`, apoi **repornește Django**
-ca să încarce noua valoare. Acest secret se schimbă la fiecare pornire a
-`stripe listen`, dacă nu ai definit un endpoint fix în Dashboard.
+Îți dă un `whsec_...` — pui valoarea aia în `.env` la
+`STRIPE_WEBHOOK_SECRET` și **repornești Django**. Secretul se schimbă
+de fiecare dată când repornești `stripe listen`, deci dacă la un
+moment dat webhook-ul începe să dea 400, probabil ai un secret vechi.
 
-Testează cu cardul `4242 4242 4242 4242`, orice dată viitoare, orice CVC.
-În terminalul `stripe listen` ar trebui să apară `checkout.session.completed`
-urmat de `200`; dacă apare `400`, secretul din `.env` nu se potrivește cu
-cel afișat la pornirea curentă a listener-ului.
+Cardul de test: `4242 4242 4242 4242`, orice dată viitoare, orice CVC.
 
-> Notă: dacă `stripe switch context` revine mereu la `live`, forțează
-> sandbox-ul direct fără să depinzi de context activ:
-> ```bash
-> stripe listen --forward-to localhost:8000/payments/webhook/ --api-key sk_test_...
-> ```
-> (cheia de test se ia din Dashboard → Developers → API keys, cu toggle-ul
-> pe Sandbox).
+> Dacă `stripe switch context` tot revine la `live`, forțează sandbox-ul
+> direct: `stripe listen --forward-to localhost:8000/payments/webhook/ --api-key sk_test_...`
 
-### Snapshot-ul comenzii (`Order.items`)
+### Cum arată o comandă salvată (`Order.items`)
 
-`Order.items` (`JSONField`) salvează la momentul confirmării plății, în
-`stripe_webhook`, un dicționar `{product_name: qty}` — nu `{product_id: qty}`.
-Motivul: dacă numele unui produs se schimbă ulterior, comanda veche
-păstrează denumirea de la momentul cumpărării.
+Când se confirmă plata, salvăm în `Order.items` un dicționar de forma
+`{"nume produs": cantitate}`, nu id-uri. Ideea e că dacă schimbi numele
+unui produs mai târziu, comanda veche păstrează numele de atunci, nu
+cel curent. Stocul tot pe id se scade (din coșul original salvat în
+metadata Stripe), doar ce afișăm în comandă e pe nume.
 
-Decrementarea stocului (`Product.objects.filter(id=...).update(...)`) tot
-pe `product_id` se face, folosind coșul original din `metadata` — abia
-după aceea se construiește dicționarul cu nume, dintr-un singur query
-(`Product.objects.filter(id__in=cart.keys())`), pentru salvat în `Order`.
+Comenzile mai vechi de dinainte de schimbarea asta au rămas cu id-uri,
+nu se convertesc singure retroactiv.
 
-Comenzile create **înainte** de această schimbare au rămas cu `product_id`
-ca și cheie în `items` — nu se recalculează retroactiv.
+În admin, la lista de comenzi, coloana Items nu mai arată JSON brut —
+am pus un `items_display` custom care scoate fiecare produs pe rândul
+lui.
 
-În Django admin (`orders/admin.py`), coloana `Items` din lista de comenzi
-nu mai afișează JSON-ul brut, ci un `items_display` custom (`ModelAdmin`)
-care randează fiecare produs pe rând propriu, cu `×` între nume și
-cantitate.
+## Autentificare, pe scurt
 
-## Cum funcționează autentificarea
-
-- `/api/auth/register/` — creează cont (username, email, parolă, adresă)
-- `/api/auth/login/` — primește `{ email, password }`, întoarce `access` +
-  `refresh` token (JWT). Salvate în `localStorage` sub cheile `access` și
-  `refresh`.
-- Token-ul `access` e atașat automat la fiecare cerere din
-  `src/api/client.js`; la un 401, se încearcă automat refresh cu token-ul
-  `refresh`.
-- **2FA opțional**: userul poate activa autentificare în doi pași (TOTP,
-  compatibil Google Authenticator) din `/api/auth/2fa/setup/`. Dacă e
-  activ, login-ul cere și un cod suplimentar (`code`).
-- Rutele de produse/coș/wishlist din React sunt protejate
-  (`ProtectedRoute`) — dacă nu ești logat, ești trimis la `/login`.
-- Conexiunile WebSocket (recenzii live) necesită și ele un token JWT
-  valid trimis ca query param la conectare — vezi `jwt_auth_middleware.py`
-  în app-ul `api`.
+- `/api/auth/register/` — cont nou
+- `/api/auth/login/` — dă `access` + `refresh` (JWT), salvate în
+  `localStorage`
+- Tokenul se atașează automat la fiecare request din `src/api/client.js`;
+  la 401 se încearcă refresh automat
+- 2FA opțional (TOTP, merge cu Google Authenticator), din
+  `/api/auth/2fa/setup/`
+- Rutele protejate din React (`ProtectedRoute`) te trimit la `/login`
+  dacă nu ești logat
+- WebSocket-ul de recenzii cere și el token JWT valid ca query param
 
 ## Rate limiting
-
-Toate endpoint-urile sensibile sunt protejate cu throttling
-(`DEFAULT_THROTTLE_RATES` în `settings.py`):
 
 | Endpoint | Limită |
 |---|---|
 | Login | 5/min |
-| 2FA confirm | 5/min |
+| Confirmare 2FA | 5/min |
 | Register | 3/oră |
 | Checkout | 10/min |
-| Restul endpoint-urilor autentificate | 60/min |
+| Restul (autentificat) | 60/min |
 
-## Structura paginilor React
+## Rute React vs paginile vechi
 
-| Rută                  | Corespondent Django original          |
-|------------------------|----------------------------------------|
-| `/`                    | `index.html`                          |
-| `/electric` `/acoustic` `/bass` | `electric.html`, `acoustic.html`, `bass.html` |
-| `/products/:brand`     | `products.html`                       |
-| `/product/:id`         | `Produs.html`                         |
-| `/cart`                 | `cart.html`                           |
-| `/wishlist`             | `wishlist.html`                       |
-| `/login`                | `login.html`                          |
-| `/signin`               | `signin.html`                         |
+| Rută | Era |
+|---|---|
+| `/` | `index.html` |
+| `/electric` `/acoustic` `/bass` | paginile pe categorie |
+| `/products/:brand` | `products.html` |
+| `/product/:id` | `Produs.html` |
+| `/cart` | `cart.html` |
+| `/wishlist` | `wishlist.html` |
+| `/login`, `/signin` | login/signin vechi |
 
-## Ce merită continuat
+## Ce am găsit testând coșul (sept 2026)
 
-- Pagina de detaliu produs presupune că brand-ul e cunoscut de frontend
-  (`src/config/catalog.js`) — dacă adaugi branduri noi în baza de date,
-  actualizează și fișierul acela.
-- View-urile Django clasice din `products/views.py`, `cart/views.py`
-  (server-rendered, neconectate la React) ar trebui verificate — dacă nu
-  mai sunt folosite în `urls.py`, e mai sigur să fie șterse decât lăsate
-  active în paralel cu API-ul DRF.
-- Comenzile vechi (create înainte de trecerea la `{product_name: qty}`)
-  rămân cu `product_id` ca și cheie în `items` — dacă e nevoie de
-  consistență istorică (ex. rapoarte pe nume de produs), ar trebui o
-  migrare de date care să le convertească retroactiv.
+Am pierdut o seară testând manual coșul/checkout-ul, ca să văd ce se
+poate strica dacă trimit direct request-uri, nu doar din UI. Am găsit
+două chestii, ambele reparate.
+
+**1. Cantitate negativă dădea total negativ.** `CartQuoteView` și
+`CheckoutView` făceau `int(qty)` fără să verifice dacă e pozitiv. Am
+trimis `{"1": -5}` și mi-a dat înapoi `total: -26061.28`. Am adăugat
+validare: dacă `qty` nu e număr, sau e `<= 0`, sau depășește stocul,
+răspunde 400 direct, înainte să calculeze orice.
+
+La `CheckoutView` chestia asta era parțial "reparată" din întâmplare
+— Stripe refuză cantități `<= 0` când creezi sesiunea — dar nu voiam
+să depind de faptul că altcineva verifică pentru mine.
+
+**2. Una serioasă: exista un al doilea checkout, fără login.**
+`cart/views.py` (fișierul vechi, care ar fi trebuit să nu mai fie
+folosit) avea propriile lui `quote()` și `checkout()`, montate la
+`/cart/checkout/` — diferit de `/api/cart/checkout/` — cu
+`AllowAny`. Adică oricine, fără cont, fără token, putea trimite un
+request și primea înapoi un link Stripe funcțional, plătibil, fără
+adresă de livrare, fără nimic. Am testat și chiar a mers — mi-a dat
+`checkout_url` valid, fără header de autentificare.
+
+L-am șters de tot (funcțiile și rutele din `cart/urls.py`), am lăsat
+în `cart/` doar view-urile vechi cu sesiune care oricum nu ating
+Stripe.
+
+Lecția: dacă ai două view-uri care fac cam același lucru, unul vechi
+și unul nou, nu presupune că cel vechi "nu mai e folosit" doar pentru
+că frontend-ul nu-l mai apelează — verifică dacă ruta chiar mai e
+montată, pentru că altfel oricine poate să-l lovească direct.
+
+## Ce mai e de făcut
+
+- Pagina de produs presupune că brandul e deja cunoscut în
+  `src/config/catalog.js` — dacă adaugi branduri noi în DB, trebuie
+  actualizat și acolo manual.
+- View-urile vechi din `products/views.py` (server-rendered) ar trebui
+  verificate dacă mai sunt folosite undeva — dacă nu, mai bine șterse
+  decât lăsate să zacă acolo.
+- Comenzile foarte vechi rămân cu id-uri în loc de nume în `items` —
+  dacă la un moment dat contează (rapoarte, istoric), ar trebui o
+  migrare care să le convertească.
